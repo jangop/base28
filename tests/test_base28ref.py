@@ -1,6 +1,19 @@
 import pytest
 
-from tools.base28ref import ALPHABET, Overflow, encode_payload, symbol_count
+from tools.base28ref import (
+    ALPHABET,
+    CheckMismatch,
+    ExcludedConfusable,
+    InvalidCharacter,
+    Overflow,
+    WrongLength,
+    check_symbol,
+    decode,
+    encode,
+    encode_payload,
+    format_rev45,
+    symbol_count,
+)
 
 
 def test_alphabet_exact() -> None:
@@ -54,3 +67,96 @@ def test_symbol_count_bounds() -> None:
         _ = symbol_count(0)
     with pytest.raises(ValueError):
         _ = symbol_count(129)
+
+
+def test_encode_appends_valid_check() -> None:
+    s = encode(0, 45)
+    assert len(s) == 11
+    assert s[:10] == "0" * 10
+    assert decode(s, 45) == 0
+
+
+def test_roundtrip_many() -> None:
+    for v in [0, 1, 27, 28, 2**44, 2**45 - 1, 0x1234_5678_ABC]:
+        assert decode(encode(v, 45), 45) == v
+
+
+def test_decode_normalizes_case_hyphens_whitespace() -> None:
+    s = encode(2**45 - 1, 45)
+    grouped = f"{s[0:3]}-{s[3:7]}-{s[7:11]}"
+    assert decode(grouped.lower(), 45) == 2**45 - 1
+    assert decode(" " + s + " ", 45) == 2**45 - 1
+
+
+def test_decode_aliases_i_l_o() -> None:
+    v = decode(encode(1, 45), 45)
+    s = encode(1, 45)  # payload ends in "1"
+    assert s[9] == "1"
+    aliased = s[:9] + "I" + s[10:]
+    assert decode(aliased, 45) == v
+    aliased_l = s[:9] + "L" + s[10:]
+    assert decode(aliased_l, 45) == v
+    z = encode(0, 45)
+    aliased_o = "O" + z[1:]
+    assert decode(aliased_o, 45) == 0
+
+
+def test_decode_rejects_excluded_confusables_with_position() -> None:
+    s = encode(0, 45)
+    for bad in "25SZU":
+        with pytest.raises(ExcludedConfusable) as exc:
+            _ = decode(bad + s[1:], 45)
+        assert exc.value.char == bad
+        assert exc.value.position == 0
+
+
+def test_decode_rejects_other_invalid_characters() -> None:
+    s = encode(0, 45)
+    with pytest.raises(InvalidCharacter) as exc:
+        _ = decode(s[:5] + "*" + s[6:], 45)
+    assert exc.value.position == 5
+    assert not isinstance(exc.value, ExcludedConfusable)
+
+
+def test_decode_wrong_length() -> None:
+    with pytest.raises(WrongLength) as exc:
+        _ = decode("0000", 45)
+    assert exc.value.got == 4
+    assert exc.value.expected == 11
+
+
+def test_single_symbol_error_always_caught() -> None:
+    s = encode(0x1234_5678_ABC, 45)
+    for pos in range(11):
+        for c in ALPHABET:
+            if c == s[pos]:
+                continue
+            corrupted = s[:pos] + c + s[pos + 1 :]
+            with pytest.raises(CheckMismatch):
+                _ = decode(corrupted, 45)
+
+
+def test_adjacent_transposition_always_caught() -> None:
+    s = encode(0x1234_5678_ABC, 45)
+    for pos in range(10):
+        if s[pos] == s[pos + 1]:
+            continue
+        swapped = s[:pos] + s[pos + 1] + s[pos] + s[pos + 2 :]
+        with pytest.raises(CheckMismatch):
+            _ = decode(swapped, 45)
+
+
+def test_decode_overflow_rejected() -> None:
+    # Payload "Y" * 10 is 28**10 - 1 >= 2**45; append its valid check
+    # symbol so only the value check can fail.
+    payload = "Y" * 10
+    with pytest.raises(Overflow):
+        _ = decode(payload + check_symbol(payload), 45)
+
+
+def test_format_rev45() -> None:
+    s = encode(2**45 - 1, 45)
+    g = format_rev45(s)
+    assert len(g) == 13
+    assert g[3] == "-" and g[8] == "-"
+    assert g.replace("-", "") == s
