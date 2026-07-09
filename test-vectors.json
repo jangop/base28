@@ -1,0 +1,55 @@
+{
+  "profile": "rev45",
+  "bits": 45,
+  "payload_symbols": 10,
+  "total_symbols": 11,
+  "valid": [
+    {
+      "value": 0,
+      "encoded": "00000000000",
+      "display": "000-0000-0000"
+    },
+    {
+      "value": 35184372088831,
+      "encoded": "4B4K8NKDG9R",
+      "display": "4B4-K8NK-DG9R"
+    },
+    {
+      "value": 21798788025799,
+      "encoded": "31NHYW4HGH7",
+      "display": "31N-HYW4-HGH7"
+    },
+    {
+      "value": 12388390988806,
+      "encoded": "16R4WCVGCGY",
+      "display": "16R-4WCV-GCGY"
+    },
+    {
+      "value": 25477152372883,
+      "encoded": "3DE77EQ3HHF",
+      "display": "3DE-77EQ-3HHF"
+    }
+  ],
+  "invalid": [
+    {
+      "input": "S1NHYW4HGH7",
+      "error": "ExcludedConfusable"
+    },
+    {
+      "input": "31NHY*4HGH7",
+      "error": "InvalidCharacter"
+    },
+    {
+      "input": "31NHYW4H",
+      "error": "WrongLength"
+    },
+    {
+      "input": "31NHYW4HGH0",
+      "error": "CheckMismatch"
+    },
+    {
+      "input": "YYYYYYYYYYJ",
+      "error": "Overflow"
+    }
+  ]
+}
