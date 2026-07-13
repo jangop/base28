@@ -13,11 +13,15 @@ different, valid-looking code. Prior art: Douglas Crockford's
 confusable `I`, `L`, `O`, `U` and defines decode aliases for the ones it
 keeps close to the alphabet (`I`/`L` to `1`, `O` to `0`); Zooko
 Wilcox-O'Hearn's [z-base-32](https://philzimmermann.com/docs/human-oriented-base-32-encoding.txt)
-reorders Crockford's alphabet by human-perceived symbol frequency for
-spoken and handwritten transcription. base28 keeps Crockford's alphabet
-order and its I/L/O alias mechanism, but goes one step further: it drops
-`2`, `5`, `S`, and `Z` entirely rather than aliasing them, on the reasoning
-in section 6. Twenty-eight symbols remain.
+uses its own distinct 32-symbol alphabet, `ybndrfg8ejkmcpqxot1uwisza345h769`,
+which is not a permutation of Crockford's: rather than dropping both
+members of a confusable pair, it picks one survivor per pair (for example,
+keeps `z`, drops `2`; keeps `o`, drops `0`), and orders its own symbol set
+by human-perceived frequency for spoken and handwritten transcription.
+base28 instead keeps Crockford's alphabet, its ascending order, and its
+I/L/O alias mechanism, but goes one step further: it drops `2`, `5`, `S`,
+and `Z` entirely rather than aliasing or picking a survivor, on the
+reasoning in section 6. Twenty-eight symbols remain.
 
 ## 2. Alphabet
 
@@ -98,10 +102,13 @@ pairs = [(n, symbol_count(n)) for n in range(1, 129)]
 Given a value `v` and bit width `n`:
 
 1. Compute `k = symbol_count(n)` per section 4.
-2. Write `v` big-endian in base 28 using the alphabet of section 2, then
+2. Validate `0 <= v < 2^n`. A value outside this range cannot be
+   represented at the declared bit width; reject it as `Overflow`, the
+   same error class used by decoding's value check (section 6, step 6).
+3. Write `v` big-endian in base 28 using the alphabet of section 2, then
    left-pad with the symbol `0` (value 0, not the letter O, which is not in
    the alphabet) to exactly `k` symbols. This is the payload.
-3. Compute the Damm check symbol (section 7) over the `k` payload symbols
+4. Compute the Damm check symbol (section 7) over the `k` payload symbols
    and append it.
 
 The total encoded length is `k + 1` symbols: `k` payload symbols followed
