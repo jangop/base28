@@ -118,6 +118,24 @@ def test_decode_rejects_other_invalid_characters() -> None:
     assert not isinstance(exc.value, ExcludedConfusable)
 
 
+def test_decode_rejects_excluded_confusable_position_counts_hyphens() -> None:
+    # "4B4-S8NK-DG9R" is the hyphenated rev45 display form for value
+    # 35184372088831 with the payload's fifth symbol ("K", ALPHABET index 4)
+    # swapped for the excluded confusable "S". Raw indices: 0='4', 1='B',
+    # 2='4', 3='-', 4='S'. The reported position must count the hyphen at
+    # index 3, landing on 4, not 3 (the offset it would have in the
+    # hyphen-stripped payload).
+    s = encode(35184372088831, 45)
+    assert s[:5] == "4B4K8"
+    grouped = format_rev45(s)
+    bad = grouped.replace("K8", "S8", 1)
+    assert bad == "4B4-S8NK-DG9R"
+    with pytest.raises(ExcludedConfusable) as exc:
+        _ = decode(bad, 45)
+    assert exc.value.char == "S"
+    assert exc.value.position == 4
+
+
 def test_decode_wrong_length() -> None:
     with pytest.raises(WrongLength) as exc:
         _ = decode("0000", 45)

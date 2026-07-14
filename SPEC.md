@@ -123,15 +123,27 @@ therefore `k = symbol_count(n)`) runs the following pipeline in order.
 Each step is fail-loud: on failure it raises immediately with enough
 information to locate the problem, and no later step runs.
 
-1. **Normalize.** Uppercase the string; strip hyphens and whitespace.
+1. **Normalize.** Trim leading and trailing whitespace from the input,
+   then walk the trimmed string character by character, uppercasing each
+   one. Space, tab, and hyphen are treated as internal separators and are
+   skipped, but they are not removed into a separate string first: the
+   position used in step 3 is the offset into this trimmed-but-otherwise-
+   intact string, so separators and any other characters ahead of an
+   offending character still count toward its position. Internal
+   whitespace other than space or tab (newline, carriage return,
+   non-breaking space, and so on) is not treated as a separator and is
+   passed on to alphabet checking like any other character.
 2. **Alias.** Replace `I` and `L` with `1`; replace `O` with `0`. This is
    the only silent correction anywhere in the pipeline.
 3. **Reject.** Any character remaining that is not in the 28-symbol
-   alphabet is rejected, naming the character and its position (position
-   counted in the normalized string, 0-indexed). `2`, `5`, `S`, `Z`, and
-   `U` are recognized as excluded confusables and raise a distinct error
-   subclass with a message telling the reader to re-check the source,
-   rather than the generic invalid-character message.
+   alphabet is rejected, naming the character and its position: the
+   0-indexed offset within the leading/trailing-trimmed input from step 1,
+   counting every character up to and including the offending one,
+   separators included. This is not an offset into an alphabet-only string
+   with separators already removed. `2`, `5`, `S`, `Z`, and `U` are
+   recognized as excluded confusables and raise a distinct error subclass
+   with a message telling the reader to re-check the source, rather than
+   the generic invalid-character message.
 4. **Length check.** The cleaned string must be exactly `k + 1` symbols.
    Mismatch raises with both the observed and expected length.
 5. **Damm verify.** Fold all `k + 1` symbols through the Damm table
