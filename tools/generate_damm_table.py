@@ -79,8 +79,9 @@ def main() -> int:
     # Sanity sweep: every linear candidate over Z_28 must fail WTA
     # (cyclic groups of even order have no orthomorphisms). A pass here
     # means the checker is broken.
-    for a in coprime_units():
-        for b in coprime_units():
+    units = coprime_units()
+    for a in units:
+        for b in units:
             t = linear_table(a, b)
             if not is_latin_square(t):
                 print(f"CHECKER BUG: linear a={a} b={b} not Latin", file=sys.stderr)
@@ -96,7 +97,7 @@ def main() -> int:
         json.dumps({"order": ORDER, "construction": CONSTRUCTION, "table": table})
         + "\n"
     )
-    print(f"orthomorphism table verified (Latin + WTA): {CONSTRUCTION}")
+    print(f"orthomorphism table verified (Latin and WTA): {CONSTRUCTION}")
     return 0
 
 

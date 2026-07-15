@@ -164,7 +164,7 @@ information to locate the problem, and no later step runs.
 | `ExcludedConfusable` (subclass of `InvalidCharacter`) | 3 | offending character, position |
 | `WrongLength` | 4 | observed length, expected length |
 | `CheckMismatch` | 5 | (indicates at least one symbol is wrong; Damm alone cannot say which) |
-| `Overflow` | 6 (also reachable from encoding, section 5, for out-of-range input) | decoded value, bit width |
+| `Overflow` | 6 (also reachable from encoding, section 5, for out-of-range input) | offending value, bit width |
 
 ### Why alias I/L/O but reject 2/5/S/Z
 
@@ -175,6 +175,12 @@ both members of each confusion pair are dropped from the alphabet: none of
 the four is ever written by an encoder, so a reported `S` misread some
 unknown other glyph, and any alias choice would be a guess. Hard reject is
 the only honest answer in that case.
+
+`U` is also rejected, and carries the same `ExcludedConfusable` class as
+`2`, `5`, `S`, and `Z`, but for a different reason: it is inherited from
+Crockford's exclusion of `U` to avoid accidental obscenity, not a
+confusability concern. It is never written by an encoder either, so
+rejecting it on decode is consistent with the rest of the excluded set.
 
 ## 7. Check symbol
 

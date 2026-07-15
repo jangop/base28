@@ -19,12 +19,13 @@ def sha_value(seed: str) -> int:
 
 
 def main() -> None:
-    values = [0, 2**45 - 1, sha_value("base28"), sha_value("rev45"), sha_value("vector-3")]
+    seeds = [0, 2**45 - 1, sha_value("base28"), sha_value("rev45"), sha_value("vector-3")]
+    encoded = [encode(v, 45) for v in seeds]
     valid = [
-        {"value": v, "encoded": encode(v, 45), "display": format_rev45(encode(v, 45))}
-        for v in values
+        {"value": v, "encoded": e, "display": format_rev45(e)}
+        for v, e in zip(seeds, encoded, strict=True)
     ]
-    good = encode(sha_value("base28"), 45)
+    good = encoded[2]
     overflow_payload = "Y" * 10
     invalid = [
         {"input": "S" + good[1:], "error": "ExcludedConfusable"},

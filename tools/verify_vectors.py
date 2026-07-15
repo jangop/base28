@@ -12,6 +12,40 @@ from typing import cast
 
 ROOT = Path(__file__).resolve().parent.parent
 ALPHABET = "01346789ABCDEFGHJKMNPQRTVWXY"
+ALIASES = {"I": "1", "L": "1", "O": "0"}
+EXCLUDED = set("25SZU")
+
+
+def classify_invalid(inp: str, table: list[list[int]]) -> str:
+    """Return the error class the decode pipeline (SPEC section 6) raises first.
+
+    Reimplemented from the spec text, independent of base28ref, so a
+    mislabeled invalid vector is caught rather than rubber-stamped.
+    """
+    symbols: list[str] = []
+    for raw in inp.strip():
+        c = raw.upper()
+        if c in "- \t":
+            continue
+        c = ALIASES.get(c, c)
+        if c in EXCLUDED:
+            return "ExcludedConfusable"
+        if c not in ALPHABET:
+            return "InvalidCharacter"
+        symbols.append(c)
+    if len(symbols) != 11:
+        return "WrongLength"
+    interim = 0
+    for c in symbols:
+        interim = table[interim][ALPHABET.index(c)]
+    if interim != 0:
+        return "CheckMismatch"
+    value = 0
+    for c in symbols[:10]:
+        value = value * 28 + ALPHABET.index(c)
+    if value >= 2**45:
+        return "Overflow"
+    return "VALID"
 
 
 def main() -> int:
@@ -44,8 +78,12 @@ def main() -> int:
         if expect != encoded:
             print(f"MISMATCH value={v}: expected {expect}, file has {encoded}")
             failures += 1
-        if display.replace("-", "") != encoded:
-            print(f"DISPLAY MISMATCH value={v}")
+        expected_display = f"{encoded[0:3]}-{encoded[3:7]}-{encoded[7:11]}"
+        if display != expected_display:
+            print(
+                f"DISPLAY MISMATCH value={v}: expected {expected_display}, "
+                + f"file has {display}"
+            )
             failures += 1
         full_interim = 0
         for c in encoded:
@@ -53,10 +91,21 @@ def main() -> int:
         if full_interim != 0:
             print(f"FOLD NOT ZERO value={v}")
             failures += 1
+    invalid_cases = cast(list[dict[str, object]], vectors["invalid"])
+    for case in invalid_cases:
+        inp = cast(str, case["input"])
+        declared = cast(str, case["error"])
+        actual = classify_invalid(inp, table)
+        if actual != declared:
+            print(f"INVALID MISLABELED input={inp!r}: declared {declared}, is {actual}")
+            failures += 1
     if failures:
         print(f"{failures} failures", file=sys.stderr)
         return 1
-    print(f"all {len(valid_cases)} valid vectors verified independently")
+    print(
+        f"all {len(valid_cases)} valid and {len(invalid_cases)} invalid "
+        + "vectors verified independently"
+    )
     return 0
 
 

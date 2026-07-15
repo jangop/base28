@@ -28,23 +28,29 @@ class Base28Error(Exception):
 class Overflow(Base28Error):
     """Value out of range for the declared bit width."""
 
+    def __init__(self, value: int, bits: int) -> None:
+        self.value: int = value
+        self.bits: int = bits
+        super().__init__(f"value {value} out of range for {bits}-bit width")
+
 
 class InvalidCharacter(Base28Error):
-    def __init__(self, char: str, position: int) -> None:
+    def __init__(self, char: str, position: int, message: str | None = None) -> None:
         self.char: str = char
         self.position: int = position
-        super().__init__(f"invalid character {char!r} at position {position}")
+        if message is None:
+            message = f"invalid character {char!r} at position {position}"
+        super().__init__(message)
 
 
 class ExcludedConfusable(InvalidCharacter):
     def __init__(self, char: str, position: int) -> None:
-        Base28Error.__init__(
-            self,
+        super().__init__(
+            char,
+            position,
             f"character {char!r} at position {position} is never part of a "
             + "base28 code (excluded as confusable); re-read the source",
         )
-        self.char: str = char
-        self.position: int = position
 
 
 class WrongLength(Base28Error):
@@ -62,8 +68,11 @@ def symbol_count(n: int) -> int:
     """Smallest k with 28**k >= 2**n, for MIN_BITS <= n <= MAX_BITS."""
     if not MIN_BITS <= n <= MAX_BITS:
         raise ValueError(f"bit width must be in [{MIN_BITS}, {MAX_BITS}], got {n}")
+    target = 1 << n  # 2**n, but typed int (2**n widens to Any under negative exponents)
     k = 1
-    while 28**k < 2**n:
+    power = 28
+    while power < target:
+        power *= 28
         k += 1
     return k
 
@@ -72,7 +81,7 @@ def encode_payload(v: int, n: int) -> str:
     """Encode v as exactly symbol_count(n) base28 symbols, big-endian."""
     k = symbol_count(n)
     if not 0 <= v < 2**n:
-        raise Overflow(f"value must be in [0, 2**{n}), got {v}")
+        raise Overflow(v, n)
     out: list[str] = []
     rest = v
     for _ in range(k):
@@ -126,7 +135,7 @@ def decode(s: str, n: int) -> int:
     for value in values[:k]:
         v = v * 28 + value
     if v >= 2**n:
-        raise Overflow(f"decoded value {v} does not fit in {n} bits")
+        raise Overflow(v, n)
     return v
 
 

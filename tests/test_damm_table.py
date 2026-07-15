@@ -34,3 +34,9 @@ def test_property_checkers_reject_bad_tables() -> None:
     assert not is_weak_totally_antisymmetric(add_table)
     not_latin = [[0] * 28 for _ in range(28)]
     assert not is_latin_square(not_latin)
+    # Every row is a valid permutation of 0..27 (passes the row check), but
+    # all rows are identical, so every column is constant. This exercises
+    # is_latin_square's column-uniqueness branch, which the row-broken
+    # all-zero fixture above never reaches.
+    row_ok_col_bad = [list(range(28)) for _ in range(28)]
+    assert not is_latin_square(row_ok_col_bad)

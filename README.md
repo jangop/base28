@@ -11,6 +11,6 @@ Status: draft v0.1. No published library yet; tools/ holds the reference
 implementation used to generate and verify the frozen artifacts.
 
 ```bash
-uv run pytest              # property + vector tests
+uv run pytest              # property and vector tests
 uv run python tools/verify_vectors.py   # independent re-verification
 ```

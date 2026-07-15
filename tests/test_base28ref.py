@@ -83,22 +83,26 @@ def test_roundtrip_many() -> None:
 
 def test_decode_normalizes_case_hyphens_whitespace() -> None:
     s = encode(2**45 - 1, 45)
-    grouped = f"{s[0:3]}-{s[3:7]}-{s[7:11]}"
+    grouped = format_rev45(s)
     assert decode(grouped.lower(), 45) == 2**45 - 1
     assert decode(" " + s + " ", 45) == 2**45 - 1
 
 
+def test_decode_rejects_internal_newline() -> None:
+    s = encode(0, 45)
+    with pytest.raises(InvalidCharacter) as exc:
+        _ = decode(s[:5] + "\n" + s[5:], 45)
+    assert exc.value.char == "\n"
+    assert not isinstance(exc.value, ExcludedConfusable)
+
+
 def test_decode_aliases_i_l_o() -> None:
-    v = decode(encode(1, 45), 45)
     s = encode(1, 45)  # payload ends in "1"
     assert s[9] == "1"
-    aliased = s[:9] + "I" + s[10:]
-    assert decode(aliased, 45) == v
-    aliased_l = s[:9] + "L" + s[10:]
-    assert decode(aliased_l, 45) == v
+    assert decode(s[:9] + "I" + s[10:], 45) == 1
+    assert decode(s[:9] + "L" + s[10:], 45) == 1
     z = encode(0, 45)
-    aliased_o = "O" + z[1:]
-    assert decode(aliased_o, 45) == 0
+    assert decode("O" + z[1:], 45) == 0
 
 
 def test_decode_rejects_excluded_confusables_with_position() -> None:
@@ -136,10 +140,18 @@ def test_decode_rejects_excluded_confusable_position_counts_hyphens() -> None:
     assert exc.value.position == 4
 
 
-def test_decode_wrong_length() -> None:
+def test_decode_wrong_length_too_few() -> None:
     with pytest.raises(WrongLength) as exc:
         _ = decode("0000", 45)
     assert exc.value.got == 4
+    assert exc.value.expected == 11
+
+
+def test_decode_wrong_length_too_many() -> None:
+    s = encode(0, 45)  # 11 valid symbols
+    with pytest.raises(WrongLength) as exc:
+        _ = decode(s + "0", 45)
+    assert exc.value.got == 12
     assert exc.value.expected == 11
 
 
@@ -172,9 +184,23 @@ def test_decode_overflow_rejected() -> None:
         _ = decode(payload + check_symbol(payload), 45)
 
 
+def test_overflow_carries_value_and_bits() -> None:
+    with pytest.raises(Overflow) as exc:
+        _ = encode_payload(2**45, 45)
+    assert exc.value.value == 2**45
+    assert exc.value.bits == 45
+
+
 def test_format_rev45() -> None:
     s = encode(2**45 - 1, 45)
     g = format_rev45(s)
     assert len(g) == 13
     assert g[3] == "-" and g[8] == "-"
     assert g.replace("-", "") == s
+
+
+def test_format_rev45_rejects_wrong_length() -> None:
+    with pytest.raises(WrongLength) as exc:
+        _ = format_rev45("000")
+    assert exc.value.got == 3
+    assert exc.value.expected == 11
