@@ -2,7 +2,7 @@
 
 A confusable-hardened symbol encoding for short, printed,
 human-transcribable codes. Crockford base32 with 2, 5, S, and Z removed:
-28 symbols, arbitrary-precision encoding, Damm check symbol.
+28 symbols, fixed-width integer encoding, Damm check symbol.
 
 Normative specification: [SPEC.md](SPEC.md). Frozen artifacts:
 [damm_table.json](damm_table.json), [test-vectors.json](test-vectors.json).

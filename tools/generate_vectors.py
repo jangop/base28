@@ -19,7 +19,13 @@ def sha_value(seed: str) -> int:
 
 
 def main() -> None:
-    seeds = [0, 2**45 - 1, sha_value("base28"), sha_value("rev45"), sha_value("vector-3")]
+    seeds = [
+        0,
+        2**45 - 1,
+        sha_value("base28"),
+        sha_value("rev45"),
+        sha_value("vector-3"),
+    ]
     encoded = [encode(v, 45) for v in seeds]
     valid = [
         {"value": v, "encoded": e, "display": format_rev45(e)}

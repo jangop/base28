@@ -8,7 +8,7 @@ uppercase alphanumeric strings, with a trailing check symbol that catches
 the two dominant typed-back error classes. It exists for codes that a human
 reads off a screen or a label and types back in elsewhere, where every
 excluded glyph pair is one fewer chance for a misread to silently become a
-different, valid-looking code. Prior art: Douglas Crockford's
+different valid-looking code. Prior art: Douglas Crockford's
 [base32](https://www.crockford.com/base32.html) drops the visually
 confusable `I`, `L`, `O`, `U` and defines decode aliases for the ones it
 keeps close to the alphabet (`I`/`L` to `1`, `O` to `0`); Zooko
@@ -57,8 +57,7 @@ profile parameter (see section 8): it is agreed out of band between
 encoder and decoder and is never self-describing in the encoded string
 itself. A base28 string carries no marker of which profile or bit width
 produced it; the same string of symbols decodes to different values under
-different profiles. This is a deliberate scope boundary, not an oversight:
-see section 11.
+different profiles. This is a deliberate scope boundary; see section 11.
 
 ## 4. Symbol count
 
@@ -173,8 +172,8 @@ alphabet: a reader reporting `I` misread a written `1`, so the alias
 target is unique and the correction is safe. For `2`, `5`, `S`, and `Z`,
 both members of each confusion pair are dropped from the alphabet: none of
 the four is ever written by an encoder, so a reported `S` misread some
-unknown other glyph, and any alias choice would be a guess. Hard reject is
-the only honest answer in that case.
+unknown other glyph, and any alias choice would be a guess; decode rejects
+rather than guess.
 
 `U` is also rejected, and carries the same `ExcludedConfusable` class as
 `2`, `5`, `S`, and `Z`, but for a different reason: it is inherited from
@@ -190,9 +189,8 @@ exists (such quasigroups exist for every order except 2 and 6).
 
 ### Construction provenance
 
-The table is not derived from memory or literature by hand. A generation
-script produces a candidate table and brute-force verifies the WTA
-property over all `28^3 = 21952` triples; the verified table is then
+A generation script produces the candidate table and brute-force verifies
+the WTA property over all `28^3 = 21952` triples; the verified table is then
 frozen verbatim below and in `damm_table.json`. The script is kept in
 `tools/` for reproducibility, but the table in this section and in
 `damm_table.json` is normative; the script is not.
@@ -298,10 +296,9 @@ are presentation sugar only: decoding strips hyphens and whitespace and
 uppercases before any alphabet check (section 6, step 1), so
 `4b4-k8nk-dg9r`, `4B4K8NKDG9R`, and `4B4-K8NK-DG9R` all decode identically.
 
-`rev45` matches an existing live use case: an existing identifier scheme `rev` tags are
-currently 9-symbol RFC 4648 base32 encodings of a 45-bit truncated
-SHA-256 hash. The same entropy becomes 11 base28 symbols once the Damm
-check symbol is included.
+`rev45` is sized for a common identifier shape: a 45-bit truncated hash
+rendered today as a 9-symbol RFC 4648 base32 tag. The same 45 bits of
+entropy become 11 base28 symbols once the Damm check symbol is included.
 
 ## 9. Test vectors
 
@@ -316,7 +313,7 @@ the tables below are its exact content.
 | 35184372088831 | `4B4K8NKDG9R` | `4B4-K8NK-DG9R` |
 | 21798788025799 | `31NHYW4HGH7` | `31N-HYW4-HGH7` |
 | 12388390988806 | `16R4WCVGCGY` | `16R-4WCV-GCGY` |
-| 25477152372883 | `3DE77EQ3HHF` | `3DE-77EQ-3HHF` |
+| 2832504837759 | `09FWWAHNMTK` | `09F-WWAH-NMTK` |
 
 ### Invalid (`rev45`), one per error class
 
@@ -341,34 +338,31 @@ introducing hard rejects). Comparison:
   `30^10 ~= 2^49.1`: both need 10 payload symbols for 45 bits, and both
   need 27 for 128 bits. base30 saves one symbol only in narrow width
   windows (for example `n = 49`).
-- **Same protection, different philosophy.** base30 silently repairs the
+- **Same protection, opposite failure mode.** base30 silently repairs the
   common misread; base28 prevents it. base28 errors are position-specific
   and fire before check math ever runs (fail loud). base30 has a silent
   corruption path: if a third, unrelated glyph is misread as `S` or `Z`,
   the alias silently substitutes the wrong digit, and only the generic
   check-mismatch error (if any) catches it afterward.
-- **base28's invariant is teachable**: "codes never contain 2, 5, S, Z" is
-  printable on a form and cheap to validate client-side, with no alias
+- **base28's invariant is a single rule**: "codes never contain 2, 5, S, Z"
+  is printable on a form and cheap to validate client-side, with no alias
   table to reason about.
-- **The door stays open.** If the sibling typeface study
-  (`a typeface study.md`) shows the confusions are asymmetric (for
+- **Revisable.** If empirical study shows the confusions are asymmetric (for
   example `5` proving robust in practice while `S` proves fragile), the
   profile registry and parameterized alphabet admit a base30-style
   revision without redesigning the rest of the spec.
 
-### Relationship to the a typeface study study
+### Empirical validation is future work
 
 The alphabet exclusions in section 2 (`2`, `5`, `S`, `Z`, plus Crockford's
 existing `I`, `L`, `O`, `U`) are a design-time judgment call about which
 glyph pairs are confusable enough in print and handwriting to exclude
 outright rather than alias. That judgment is not backed, at v0.1, by an
-empirical confusion matrix; the sibling `a typeface study` project
-is where such empirical validation belongs, and it is out of scope for
-this spec (section 11).
+empirical confusion matrix. Producing one is out of scope for this spec
+(section 11); it belongs to a separate empirical typeface study.
 
-The alphabet may be revised via a new profile major version if the
-empirical confusion data from that study contradicts the `2`/`5`/`S`/`Z`
-exclusions made here. Any such revision changes the alphabet and
+The alphabet may be revised via a new profile major version if empirical
+confusion data later contradicts the `2`/`5`/`S`/`Z` exclusions made here. Any such revision changes the alphabet and
 therefore the encoding for existing profiles; it does not change the
 mechanism (Damm check over a WTA quasigroup, alias-then-reject decode
 pipeline) defined in sections 5 through 7.
@@ -386,8 +380,7 @@ pipeline) defined in sections 5 through 7.
   repository; it is not a published package, and this spec plus
   `test-vectors.json` is the contract any future implementation is
   written against.
-- Migrating an existing identifier scheme's existing `rev` tags to `rev45` encodings. That
-  is a separate, later effort, blocked on this spec existing.
+- Migrating any existing identifier scheme to `rev45` encodings. Such a
+  migration is a separate, later effort that depends on this spec.
 - Empirical confusion-matrix validation of the excluded glyph pairs. That
-  work lives in the sibling `a typeface study` project; see
-  section 10.
+  belongs to a separate empirical typeface study; see section 10.
