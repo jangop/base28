@@ -11,7 +11,13 @@ import sys
 from pathlib import Path
 
 ORDER = 28
-OUT_PATH = Path(__file__).resolve().parent.parent / "damm_table.json"
+OUT_PATH = (
+    Path(__file__).resolve().parent.parent
+    / "src"
+    / "base28"
+    / "data"
+    / "damm_table.json"
+)
 
 
 def is_latin_square(table: list[list[int]]) -> bool:
@@ -60,7 +66,8 @@ def add_idx(x: int, y: int) -> int:
 
 
 def sigma_idx(i: int) -> int:
-    """Orthomorphism of Z_2 x Z_2 x Z_7: [[0,1],[1,1]] on the Klein part, doubling on Z_7."""
+    """Orthomorphism of Z_2 x Z_2 x Z_7: [[0,1],[1,1]] on the Klein part,
+    doubling on Z_7."""
     a, b, z = to_group(i)
     return from_group(b, (a + b) % 2, (2 * z) % 7)
 

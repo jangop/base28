@@ -1,8 +1,13 @@
 [project]
 name = "base28"
 version = "0.1.0"
+description = "Confusable-hardened symbol encoding for short, printed, human-transcribable codes"
+readme = "README.md"
 requires-python = ">=3.14"
 dependencies = []
+
+[project.scripts]
+base28 = "base28.cli:main"
 
 [dependency-groups]
 dev = [
@@ -11,5 +16,25 @@ dev = [
     "ruff>=0.15.22",
 ]
 
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/base28"]
+
 [tool.pytest.ini_options]
+# src/ is on the path via the editable install of the project itself; "." lets
+# tests import the dev-only generators under tools/.
 pythonpath = ["."]
+testpaths = ["tests"]
+
+[tool.ruff]
+src = ["src", "tools", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]
+
+[tool.basedpyright]
+typeCheckingMode = "standard"
+include = ["src", "tools", "tests"]

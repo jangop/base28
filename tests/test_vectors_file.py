@@ -4,7 +4,7 @@ from typing import cast
 
 import pytest
 
-from tools.base28ref import (
+from base28 import (
     Base28Error,
     CheckMismatch,
     ExcludedConfusable,
@@ -14,7 +14,13 @@ from tools.base28ref import (
     decode,
 )
 
-VECTORS_PATH = Path(__file__).resolve().parent.parent / "test-vectors.json"
+VECTORS_PATH = (
+    Path(__file__).resolve().parent.parent
+    / "src"
+    / "base28"
+    / "data"
+    / "test-vectors.json"
+)
 
 ERROR_TYPES: dict[str, type[Base28Error]] = {
     "ExcludedConfusable": ExcludedConfusable,

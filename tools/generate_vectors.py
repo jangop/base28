@@ -8,9 +8,15 @@ import hashlib
 import json
 from pathlib import Path
 
-from tools.base28ref import check_symbol, encode, format_rev45
+from base28 import check_symbol, encode, format_rev45
 
-OUT_PATH = Path(__file__).resolve().parent.parent / "test-vectors.json"
+OUT_PATH = (
+    Path(__file__).resolve().parent.parent
+    / "src"
+    / "base28"
+    / "data"
+    / "test-vectors.json"
+)
 
 
 def sha_value(seed: str) -> int:

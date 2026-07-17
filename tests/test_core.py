@@ -1,6 +1,6 @@
 import pytest
 
-from tools.base28ref import (
+from base28 import (
     ALPHABET,
     CheckMismatch,
     ExcludedConfusable,

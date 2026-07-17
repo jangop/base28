@@ -1,6 +1,9 @@
 __pycache__/
 *.pyc
 .venv/
+dist/
+build/
+*.egg-info/
 
 # Local process scaffolding (plans, brainstorming specs): leaks paths and
 # internal project names; content of record lives in SPEC.md.

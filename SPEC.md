@@ -92,7 +92,7 @@ line:
 Generated with:
 
 ```python
-from tools.base28ref import symbol_count
+from base28 import symbol_count
 pairs = [(n, symbol_count(n)) for n in range(1, 129)]
 ```
 
@@ -191,9 +191,9 @@ exists (such quasigroups exist for every order except 2 and 6).
 
 A generation script produces the candidate table and brute-force verifies
 the WTA property over all `28^3 = 21952` triples; the verified table is then
-frozen verbatim below and in `damm_table.json`. The script is kept in
-`tools/` for reproducibility, but the table in this section and in
-`damm_table.json` is normative; the script is not.
+frozen verbatim below and in `src/base28/data/damm_table.json`. The script
+is kept in `tools/` for reproducibility, but the table in this section and
+in that file is normative; the script is not.
 
 Construction string, copied verbatim from `damm_table.json`:
 
@@ -302,7 +302,7 @@ entropy become 11 base28 symbols once the Damm check symbol is included.
 
 ## 9. Test vectors
 
-Also shipped machine-readable as `test-vectors.json` at the repo root;
+Also shipped machine-readable as `src/base28/data/test-vectors.json`;
 the tables below are its exact content.
 
 ### Valid (`rev45`, `n = 45`, `k = 10`)
@@ -375,10 +375,10 @@ pipeline) defined in sections 5 through 7.
 - Streaming encode or decode.
 - Padding schemes beyond the fixed left-pad-to-`k` described in section 5;
   there is no variable-length or unpadded mode.
-- A published library implementation. `tools/base28ref.py` is a reference
-  implementation used to generate and verify the frozen artifacts in this
-  repository; it is not a published package, and this spec plus
-  `test-vectors.json` is the contract any future implementation is
+- Encodings for other identifier shapes. The `base28` package implements
+  this spec, but only the `rev45` profile is defined here; other profiles
+  (different bit widths, different display grouping) are future work. This
+  spec plus `test-vectors.json` remains the contract any implementation is
   written against.
 - Migrating any existing identifier scheme to `rev45` encodings. Such a
   migration is a separate, later effort that depends on this spec.

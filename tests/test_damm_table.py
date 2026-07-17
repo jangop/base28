@@ -7,7 +7,13 @@ from tools.generate_damm_table import (
     is_weak_totally_antisymmetric,
 )
 
-TABLE_PATH = Path(__file__).resolve().parent.parent / "damm_table.json"
+TABLE_PATH = (
+    Path(__file__).resolve().parent.parent
+    / "src"
+    / "base28"
+    / "data"
+    / "damm_table.json"
+)
 
 
 def load_table() -> list[list[int]]:
