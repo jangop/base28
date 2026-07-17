@@ -28,6 +28,11 @@ def test_decode_roundtrips(capsys: pytest.CaptureFixture[str]) -> None:
     assert capsys.readouterr().out.strip() == KNOWN_VALUE
 
 
+def test_decode_generic_bits(capsys: pytest.CaptureFixture[str]) -> None:
+    assert main(["decode", "00000000000", "--bits", "45"]) == 0
+    assert capsys.readouterr().out.strip() == "0"
+
+
 def test_verify_succeeds(capsys: pytest.CaptureFixture[str]) -> None:
     assert main(["verify"]) == 0
     assert "verified independently" in capsys.readouterr().out
@@ -35,6 +40,13 @@ def test_verify_succeeds(capsys: pytest.CaptureFixture[str]) -> None:
 
 def test_decode_error_exits_2(capsys: pytest.CaptureFixture[str]) -> None:
     assert main(["decode", "SSSSSSSSSSS"]) == 2
+    assert "error:" in capsys.readouterr().err
+
+
+def test_decode_check_mismatch_exits_2(capsys: pytest.CaptureFixture[str]) -> None:
+    # Valid symbols, but the final check symbol is wrong (K -> M): a
+    # single-symbol change always breaks the Damm fold -> CheckMismatch.
+    assert main(["decode", "09FWWAHNMTM"]) == 2
     assert "error:" in capsys.readouterr().err
 
 
