@@ -11,13 +11,9 @@ Normative specification: [SPEC.md](SPEC.md). Frozen artifacts:
 
 ## Install
 
-Not yet published to PyPI. Install from a checkout:
-
 ```bash
-uv pip install .       # from the repo root
+uv add base28          # or: pip install base28
 ```
-
-Once published: `uv add base28` (or `pip install base28`).
 
 ## Library
 
