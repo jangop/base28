@@ -30,6 +30,8 @@ base28 = "base28.cli:main"
 [dependency-groups]
 dev = [
     "basedpyright>=1.39.9",
+    "commitizen>=4.16.5",
+    "lefthook>=2.1.10",
     "pytest>=9.1.1",
     "ruff>=0.15.22",
 ]
@@ -56,3 +58,10 @@ select = ["E", "F", "I", "UP", "B", "SIM"]
 [tool.basedpyright]
 typeCheckingMode = "standard"
 include = ["src", "tools", "tests"]
+
+[tool.commitizen]
+name = "cz_conventional_commits"
+version_provider = "pep621"
+tag_format = "v$version"
+major_version_zero = true
+update_changelog_on_bump = true
