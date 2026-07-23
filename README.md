@@ -72,5 +72,3 @@ scripts under `tools/`:
 uv run python -m tools.generate_damm_table   # writes src/base28/data/damm_table.json
 uv run python -m tools.generate_vectors      # writes src/base28/data/test-vectors.json
 ```
-
-Status: draft v0.1.
